@@ -1,0 +1,58 @@
+[05.10.23 02:56:14] Args: {
+    "batch_size": 64,
+    "char_emb_file": "./data/char_emb.json",
+    "dev_eval_file": "./data/dev_eval.json",
+    "dev_record_file": "./data/dev.npz",
+    "drop_prob": 0.2,
+    "ema_decay": 0.999,
+    "eval_steps": 50000,
+    "gpu_ids": [
+        0
+    ],
+    "hidden_size": 100,
+    "l2_wd": 0,
+    "load_path": null,
+    "lr": 0.5,
+    "max_ans_len": 15,
+    "max_checkpoints": 5,
+    "max_grad_norm": 5.0,
+    "maximize_metric": true,
+    "metric_name": "F1",
+    "name": "baseline",
+    "num_epochs": 2,
+    "num_visuals": 10,
+    "num_workers": 4,
+    "save_dir": "./save/train/baseline-01",
+    "seed": 224,
+    "test_eval_file": "./data/test_eval.json",
+    "test_record_file": "./data/test.npz",
+    "train_eval_file": "./data/train_eval.json",
+    "train_record_file": "./data/train.npz",
+    "use_squad_v2": true,
+    "word_emb_file": "./data/word_emb.json"
+}
+[05.10.23 02:56:14] Using random seed 224...
+[05.10.23 02:56:14] Loading embeddings...
+[05.10.23 02:56:14] Building model...
+[05.10.23 02:56:17] Saver will maximize F1...
+[05.10.23 02:56:17] Building dataset...
+[05.10.23 02:56:30] Training...
+[05.10.23 02:56:30] Starting epoch 1...
+[05.10.23 02:58:37] Evaluating at step 50048...
+[05.10.23 02:58:43] Saved checkpoint: ./save/train/baseline-01/step_50048.pth.tar
+[05.10.23 02:58:43] New best checkpoint at step 50048...
+[05.10.23 02:58:43] Dev NLL: 06.24, F1: 52.57, EM: 52.57, AvNA: 52.51
+[05.10.23 02:58:43] Visualizing in TensorBoard...
+[05.10.23 03:00:52] Evaluating at step 100096...
+[05.10.23 03:00:59] Saved checkpoint: ./save/train/baseline-01/step_100096.pth.tar
+[05.10.23 03:00:59] Dev NLL: 06.22, F1: 52.57, EM: 52.57, AvNA: 52.51
+[05.10.23 03:00:59] Visualizing in TensorBoard...
+[05.10.23 03:02:01] Starting epoch 2...
+[05.10.23 03:03:08] Evaluating at step 150148...
+[05.10.23 03:03:17] Saved checkpoint: ./save/train/baseline-01/step_150148.pth.tar
+[05.10.23 03:03:17] Dev NLL: 06.22, F1: 52.57, EM: 52.57, AvNA: 52.51
+[05.10.23 03:03:17] Visualizing in TensorBoard...
+[05.10.23 03:05:24] Evaluating at step 200196...
+[05.10.23 03:05:32] Saved checkpoint: ./save/train/baseline-01/step_200196.pth.tar
+[05.10.23 03:05:32] Dev NLL: 06.18, F1: 52.57, EM: 52.57, AvNA: 52.51
+[05.10.23 03:05:32] Visualizing in TensorBoard...
