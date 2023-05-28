@@ -29,6 +29,7 @@ class BiDAF(nn.Module):
         hidden_size (int): Number of features in the hidden state at each layer.
         drop_prob (float): Dropout probability.
     """
+
     def __init__(self, word_vectors, hidden_size, drop_prob=0.):
         super(BiDAF, self).__init__()
         self.emb = layers.Embedding(word_vectors=word_vectors,
@@ -59,14 +60,76 @@ class BiDAF(nn.Module):
         c_emb = self.emb(cw_idxs)         # (batch_size, c_len, hidden_size)
         q_emb = self.emb(qw_idxs)         # (batch_size, q_len, hidden_size)
 
-        c_enc = self.enc(c_emb, c_len)    # (batch_size, c_len, 2 * hidden_size)
-        q_enc = self.enc(q_emb, q_len)    # (batch_size, q_len, 2 * hidden_size)
+        # (batch_size, c_len, 2 * hidden_size)
+        c_enc = self.enc(c_emb, c_len)
+        # (batch_size, q_len, 2 * hidden_size)
+        q_enc = self.enc(q_emb, q_len)
 
         att = self.att(c_enc, q_enc,
                        c_mask, q_mask)    # (batch_size, c_len, 8 * hidden_size)
 
-        mod = self.mod(att, c_len)        # (batch_size, c_len, 2 * hidden_size)
+        # (batch_size, c_len, 2 * hidden_size)
+        mod = self.mod(att, c_len)
 
         out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
 
         return out
+
+
+class BIDAFWithoutAttention(nn.Module):
+
+    def __init__(self, word_vectors, hidden_size, drop_prob=0.):
+        super(BIDAFWithoutAttention, self).__init__()
+        self.emb = layers.Embedding(word_vectors=word_vectors,
+                                    hidden_size=hidden_size,
+                                    drop_prob=drop_prob)
+
+        self.enc = layers.RNNEncoder(input_size=hidden_size,
+                                     hidden_size=hidden_size,
+                                     num_layers=1,
+                                     drop_prob=drop_prob)
+
+        self.mod = layers.RNNEncoder(input_size=8 * hidden_size,
+                                     hidden_size=hidden_size,
+                                     num_layers=2,
+                                     drop_prob=drop_prob)
+
+        self.out = layers.BiDAFOutput(hidden_size=hidden_size,
+                                      drop_prob=drop_prob)
+
+    def forward(self, context, question):
+        context_out, _ = self.context_lstm(context)
+        question_out, _ = self.question_lstm(question)
+
+        context_len = context.size(1)
+        question_len = question.size(1)
+
+        context_question_mul = torch.matmul(
+            context_out, question_out.transpose(1, 2))
+        context_attention_weights = torch.softmax(context_question_mul, dim=2)
+        context_attention_out = torch.matmul(
+            context_attention_weights, question_out)
+
+        modeling_input = torch.cat([context_out, context_attention_out], dim=2)
+        modeling_out, _ = self.modeling_lstm(modeling_input)
+
+        output_input = torch.cat([context_out, modeling_out], dim=2)
+        output_out = self.output_linear(output_input)
+
+        return output_out
+
+# returns an instance of the appropriate model
+
+
+def init_model(name, split, **kwargs):
+    name = name.lower()
+    if name == 'bidaf':
+        return BiDAF(word_vectors=kwargs['word_vectors'],
+                     hidden_size=kwargs['hidden_size'],
+                     drop_prob=kwargs['drop_prob'] if split == 'train' else 0)
+    elif name == 'bidaf_no_attention':
+        return BIDAFWithoutAttention(word_vectors=kwargs['word_vectors'],
+                                     hidden_size=kwargs['hidden_size'],
+                                     drop_prob=kwargs['drop_prob'] if split == 'train' else 0)
+
+    raise ValueError(f'No model named {name}')
