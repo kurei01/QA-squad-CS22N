@@ -31,17 +31,17 @@ class BiDAF(nn.Module):
     """
     def __init__(self, word_vectors, hidden_size, drop_prob=0.):
         super(BiDAF, self).__init__()
-        self.emb = layers.Embedding(word_vectors=word_vectors,
-                                    hidden_size=hidden_size,
-                                    drop_prob=drop_prob)
+        # self.emb = layers.Embedding(word_vectors=word_vectors,
+        #                             hidden_size=hidden_size,
+        #                             drop_prob=drop_prob)
 
         self.enc = layers.RNNEncoder(input_size=hidden_size,
                                      hidden_size=hidden_size,
                                      num_layers=1,
                                      drop_prob=drop_prob)
 
-        self.att = layers.BiDAFAttention(hidden_size=2 * hidden_size,
-                                         drop_prob=drop_prob)
+        # self.att = layers.BiDAFAttention(hidden_size=2 * hidden_size,
+        #                                  drop_prob=drop_prob)
 
         self.mod = layers.RNNEncoder(input_size=8 * hidden_size,
                                      hidden_size=hidden_size,
