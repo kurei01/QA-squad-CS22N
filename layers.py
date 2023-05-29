@@ -89,7 +89,7 @@ class RNNEncoder(nn.Module):
         self.drop_prob = drop_prob
         self.rnn = nn.LSTM(input_size, hidden_size, num_layers,
                            batch_first=True,
-                        #    bidirectional=True,
+                           bidirectional=True,
                            dropout=drop_prob if num_layers > 1 else 0.)
 
     def forward(self, x, lengths):

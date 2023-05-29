@@ -17,7 +17,7 @@ import util
 from args import get_train_args
 from collections import OrderedDict
 from json import dumps
-import models 
+import models
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from ujson import load as json_load
@@ -46,8 +46,9 @@ def main(args):
 
     # Get model
     log.info('Building model...')
-    model = models.init_model(args.model, 'train',
-                              hidden_size=args.hidden_size, drop_prob=args.drop_prob)
+    model = models.LSTM(word_vectors=word_vectors,
+                              hidden_size=args.hidden_size,
+                              drop_prob=args.drop_prob)
     model = nn.DataParallel(model, args.gpu_ids)
     if args.load_path:
         log.info(f'Loading checkpoint from {args.load_path}...')
@@ -109,7 +110,8 @@ def main(args):
 
                 # Backward
                 loss.backward()
-                nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                nn.utils.clip_grad_norm_(
+                    model.parameters(), args.max_grad_norm)
                 optimizer.step()
                 scheduler.step(step // batch_size)
                 ema(model, step // batch_size)
@@ -139,7 +141,8 @@ def main(args):
                     ema.resume(model)
 
                     # Log to console
-                    results_str = ', '.join(f'{k}: {v:05.2f}' for k, v in results.items())
+                    results_str = ', '.join(
+                        f'{k}: {v:05.2f}' for k, v in results.items())
                     log.info(f'Dev {results_str}')
 
                     # Log to TensorBoard
