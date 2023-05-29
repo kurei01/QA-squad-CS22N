@@ -120,7 +120,61 @@ class BIDAFWithoutAttention(nn.Module):
 
 # returns an instance of the appropriate model
 
+class LSTMModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super(LSTMModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
 
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+
+        out, _ = self.lstm(x, (h0, c0))
+        out = self.fc(out[:, -1, :])  # Only use the last time step output
+        return out.squeeze()
+
+
+class BiLSTMModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super(BiLSTMModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+
+        self.bilstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
+        self.fc = nn.Linear(hidden_size * 2, 1)
+
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_size).to(x.device)
+
+        out, _ = self.bilstm(x, (h0, c0))
+        out = self.fc(out[:, -1, :])  # Only use the last time step output
+        return out.squeeze()
+    
+class LSTMAttentionModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super(LSTMAttentionModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.attention = nn.Linear(hidden_size, 1)
+        self.fc = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+
+        out, _ = self.lstm(x, (h0, c0))
+        attention_weights = torch.softmax(self.attention(out), dim=1)
+        attended_out = torch.sum(attention_weights * out, dim=1)
+        out = self.fc(attended_out)
+        return out.squeeze()
+    
 def init_model(name, split, **kwargs):
     name = name.lower()
     if name == 'bidaf':
@@ -131,5 +185,16 @@ def init_model(name, split, **kwargs):
         return BIDAFWithoutAttention(word_vectors=kwargs['word_vectors'],
                                      hidden_size=kwargs['hidden_size'],
                                      drop_prob=kwargs['drop_prob'] if split == 'train' else 0)
-
+    elif name == 'lstm':
+        return LSTMModel(word_vectors=kwargs['word_vectors'],
+                                     hidden_size=kwargs['hidden_size'],
+                                     drop_prob=kwargs['drop_prob'] if split == 'train' else 0)
+    elif name == 'lstm_attention':
+        return LSTMAttentionModel(word_vectors=kwargs['word_vectors'],
+                                     hidden_size=kwargs['hidden_size'],
+                                     drop_prob=kwargs['drop_prob'] if split == 'train' else 0)
+    elif name == 'bi_lstm':
+        return BiLSTMModel(word_vectors=kwargs['word_vectors'],
+                                     hidden_size=kwargs['hidden_size'],
+                                     drop_prob=kwargs['drop_prob'] if split == 'train' else 0)
     raise ValueError(f'No model named {name}')
