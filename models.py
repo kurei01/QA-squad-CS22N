@@ -126,7 +126,7 @@ class BiLSTM(nn.Module):
 
 class LSTMAttention(nn.Module):
     def __init__(self, word_vectors, hidden_size, drop_prob=0.):
-        super(BiLSTMAttention, self).__init__()
+        super(LSTMAttention, self).__init__()
         self.hidden_size = hidden_size
 
         self.embedding = nn.Embedding.from_pretrained(word_vectors)
